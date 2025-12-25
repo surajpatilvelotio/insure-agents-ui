@@ -105,7 +105,11 @@ export async function handleGetCurrentUser(userId: string): Promise<ApiResponse<
 export async function handleGetPolicies(userId: string): Promise<ApiResponse<PolicySummary[]>> {
   await simulateDelay();
 
-  const policies = getPolicySummaries(userId);
+  // For mock mode, return sample policies for any logged-in user
+  // This maps the real user to the mock user 'usr_001' who has sample policies
+  // In production, this would fetch from the real backend
+  const mockUserId = 'usr_001'; // Map all users to sample user with policies
+  const policies = getPolicySummaries(mockUserId);
 
   return {
     data: policies,

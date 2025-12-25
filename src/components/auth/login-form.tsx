@@ -95,11 +95,11 @@ export function LoginForm() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="memberId">Member ID</Label>
+                <Label htmlFor="memberId">Member ID or Email</Label>
                 <Input
                   id="memberId"
                   name="memberId"
-                  placeholder="INS2024001"
+                  placeholder="INS2025001 or email@example.com"
                   value={formData.memberId}
                   onChange={handleChange}
                   className={validationErrors.memberId ? 'border-destructive' : ''}
@@ -167,14 +167,14 @@ export function LoginForm() {
                 </Link>
               </p>
 
-              {/* Demo credentials hint */}
+              {/* Login hint */}
               <div className="mt-6 p-4 rounded-lg bg-muted/50 border border-border">
                 <p className="text-xs text-muted-foreground text-center mb-2">
-                  Demo Credentials
+                  Login Options
                 </p>
                 <div className="text-xs text-center space-y-1">
-                  <p><span className="text-muted-foreground">Member ID:</span> <code className="bg-muted px-1 rounded">INS2024001</code></p>
-                  <p><span className="text-muted-foreground">Password:</span> <code className="bg-muted px-1 rounded">password123</code></p>
+                  <p className="text-muted-foreground">Use your Member ID (e.g., <code className="bg-muted px-1 rounded">INS2025001</code>)</p>
+                  <p className="text-muted-foreground">or your registered email address</p>
                 </div>
               </div>
             </form>

@@ -1,10 +1,11 @@
 import type { ApiResponse, Policy, PolicySummary, PolicyMember } from '@/types';
 import { handleGetPolicies, handleGetPolicyById } from './mock/handlers';
-import { isMockMode, apiRequest } from './client';
+import { isMockPolicies, apiRequest } from './client';
 
 export const policiesApi = {
   async getAll(userId: string): Promise<ApiResponse<PolicySummary[]>> {
-    if (isMockMode()) {
+    // Use mock data for policies (no real backend endpoint yet)
+    if (isMockPolicies()) {
       return handleGetPolicies(userId);
     }
 
@@ -12,7 +13,8 @@ export const policiesApi = {
   },
 
   async getById(policyId: string): Promise<ApiResponse<Policy>> {
-    if (isMockMode()) {
+    // Use mock data for policies (no real backend endpoint yet)
+    if (isMockPolicies()) {
       return handleGetPolicyById(policyId);
     }
 
@@ -20,7 +22,8 @@ export const policiesApi = {
   },
 
   async getMembers(policyId: string): Promise<ApiResponse<PolicyMember[]>> {
-    if (isMockMode()) {
+    // Use mock data for policies (no real backend endpoint yet)
+    if (isMockPolicies()) {
       const policyResult = await handleGetPolicyById(policyId);
       if (policyResult.success && policyResult.data) {
         return { data: policyResult.data.members, error: null, success: true };

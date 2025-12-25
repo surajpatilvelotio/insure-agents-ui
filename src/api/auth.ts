@@ -1,21 +1,29 @@
 import type { ApiResponse, LoginRequest, LoginResponse, SignupRequest, SignupResponse, User } from '@/types';
 import { handleLogin, handleSignup, handleGetCurrentUser } from './mock/handlers';
-import { isMockMode, apiRequest } from './client';
+import { isMockAuth, apiRequest } from './client';
 
 export const authApi = {
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    if (isMockMode()) {
+    // Use real backend by default (isMockAuth defaults to false)
+    if (isMockAuth()) {
       return handleLogin(credentials);
     }
 
+    // Map memberId to identifier for backend API
+    const backendPayload = {
+      identifier: credentials.memberId,
+      password: credentials.password,
+    };
+
     return apiRequest<LoginResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(credentials),
+      body: JSON.stringify(backendPayload),
     });
   },
 
   async signup(data: SignupRequest): Promise<ApiResponse<SignupResponse>> {
-    if (isMockMode()) {
+    // Use real backend by default (isMockAuth defaults to false)
+    if (isMockAuth()) {
       return handleSignup(data);
     }
 
@@ -26,7 +34,8 @@ export const authApi = {
   },
 
   async logout(): Promise<ApiResponse<void>> {
-    if (isMockMode()) {
+    // Use real backend by default (isMockAuth defaults to false)
+    if (isMockAuth()) {
       return { data: null, error: null, success: true };
     }
 
@@ -34,7 +43,8 @@ export const authApi = {
   },
 
   async getCurrentUser(userId: string): Promise<ApiResponse<User>> {
-    if (isMockMode()) {
+    // Use real backend by default (isMockAuth defaults to false)
+    if (isMockAuth()) {
       return handleGetCurrentUser(userId);
     }
 

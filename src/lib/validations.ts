@@ -3,8 +3,16 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   memberId: z
     .string()
-    .min(1, 'Member ID is required')
-    .regex(/^INS\d{7}$/, 'Member ID must be in format INS1234567'),
+    .min(1, 'Member ID or Email is required')
+    .refine(
+      (value) => {
+        // Accept either Member ID format (INS + 7 digits) or valid email
+        const memberIdPattern = /^INS\d{7}$/;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return memberIdPattern.test(value) || emailPattern.test(value);
+      },
+      { message: 'Enter a valid Member ID (INS1234567) or email address' }
+    ),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
