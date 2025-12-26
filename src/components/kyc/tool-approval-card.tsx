@@ -32,17 +32,17 @@ export function ToolApprovalCard({
         animate={{ opacity: 1, y: 0 }}
         className="mx-4 my-2"
       >
-        <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl border border-slate-700/50 overflow-hidden backdrop-blur-xl shadow-xl">
+        <div className="bg-card rounded-2xl border border-border overflow-hidden backdrop-blur-xl shadow-xl">
           {/* Header */}
-          <div className="flex items-center gap-3 p-4 border-b border-slate-700/50 bg-blue-500/5">
+          <div className="flex items-center gap-3 p-4 border-b border-border bg-blue-500/5">
             <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-              <FileUp className="w-5 h-5 text-blue-400" />
+              <FileUp className="w-5 h-5 text-blue-500 dark:text-blue-400" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-slate-100">
+              <h4 className="text-sm font-semibold text-foreground">
                 {approval.title}
               </h4>
-              <p className="text-xs text-slate-400">{approval.description}</p>
+              <p className="text-xs text-muted-foreground">{approval.description}</p>
             </div>
           </div>
 
@@ -67,23 +67,23 @@ export function ToolApprovalCard({
         animate={{ opacity: 1, y: 0 }}
         className="mx-4 my-2"
       >
-        <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl border border-slate-700/50 overflow-hidden backdrop-blur-xl shadow-xl">
+        <div className="bg-card rounded-2xl border border-border overflow-hidden backdrop-blur-xl shadow-xl">
           {/* Header */}
-          <div className="flex items-center gap-3 p-4 border-b border-slate-700/50 bg-emerald-500/5">
+          <div className="flex items-center gap-3 p-4 border-b border-border bg-emerald-500/5">
             <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-              <Edit3 className="w-5 h-5 text-emerald-400" />
+              <Edit3 className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-slate-100">
+              <h4 className="text-sm font-semibold text-foreground">
                 {approval.title}
               </h4>
-              <p className="text-xs text-slate-400">{approval.description}</p>
+              <p className="text-xs text-muted-foreground">{approval.description}</p>
             </div>
           </div>
 
           {/* Extracted Data */}
           <div className="p-4">
-            <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
+            <div className="bg-muted rounded-xl p-4 space-y-3">
               {Object.entries(extractedData).map(([key, value]) => {
                 if (!value || key === 'document_type') return null;
                 
@@ -93,8 +93,8 @@ export function ToolApprovalCard({
 
                 return (
                   <div key={key} className="flex justify-between items-center">
-                    <span className="text-xs text-slate-400">{label}</span>
-                    <span className="text-sm text-slate-200 font-medium">
+                    <span className="text-xs text-muted-foreground">{label}</span>
+                    <span className="text-sm text-foreground font-medium">
                       {String(value)}
                     </span>
                   </div>
@@ -109,7 +109,7 @@ export function ToolApprovalCard({
                   variant="outline"
                   onClick={onReject}
                   disabled={disabled}
-                  className="flex-1 border-slate-600 hover:bg-slate-700"
+                  className="flex-1"
                 >
                   <AlertCircle className="w-4 h-4 mr-2" />
                   Data Incorrect
@@ -137,16 +137,16 @@ export function ToolApprovalCard({
       animate={{ opacity: 1, y: 0 }}
       className="mx-4 my-2"
     >
-      <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl border border-slate-700/50 p-4 backdrop-blur-xl shadow-xl">
+      <div className="bg-card rounded-2xl border border-border p-4 backdrop-blur-xl shadow-xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-            <AlertCircle className="w-5 h-5 text-amber-400" />
+            <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-slate-100">
+            <h4 className="text-sm font-semibold text-foreground">
               {approval.title}
             </h4>
-            <p className="text-xs text-slate-400">{approval.description}</p>
+            <p className="text-xs text-muted-foreground">{approval.description}</p>
           </div>
         </div>
 

@@ -109,13 +109,13 @@ function getStatusIcon(status: KycStageStatus) {
 function getStatusColor(status: KycStageStatus) {
   switch (status) {
     case 'completed':
-      return 'text-emerald-400';
+      return 'text-emerald-500 dark:text-emerald-400';
     case 'in_progress':
-      return 'text-blue-400';
+      return 'text-blue-500 dark:text-blue-400';
     case 'failed':
-      return 'text-red-400';
+      return 'text-red-500 dark:text-red-400';
     default:
-      return 'text-slate-500';
+      return 'text-muted-foreground';
   }
 }
 
@@ -126,7 +126,7 @@ function AnimatedDots() {
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="w-1 h-1 bg-blue-400 rounded-full mx-0.5"
+          className="w-1 h-1 bg-blue-500 dark:bg-blue-400 rounded-full mx-0.5"
           animate={{ opacity: [0.3, 1, 0.3] }}
           transition={{
             duration: 1,
@@ -227,11 +227,11 @@ export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanel
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-900/50 border-l border-slate-700/50">
+    <div className="h-full flex flex-col bg-card/50 border-l border-border">
       {/* Header */}
-      <div className="p-4 border-b border-slate-700/50">
-        <h3 className="text-sm font-semibold text-slate-200">Verification Progress</h3>
-        <p className="text-xs text-slate-400 mt-1">
+      <div className="p-4 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground">Verification Progress</h3>
+        <p className="text-xs text-muted-foreground mt-1">
           {overallStatus === 'idle' && 'Waiting to start...'}
           {['in_progress', 'processing', 'initiated', 'documents_uploaded'].includes(overallStatus) && 'Verification in progress'}
           {['completed', 'approved'].includes(overallStatus) && 'Verification complete!'}
@@ -259,7 +259,7 @@ export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanel
                 transition={{ delay: index * 0.1 }}
                 className={cn(
                   'relative flex items-center gap-3 p-3 rounded-lg transition-colors',
-                  isActive && 'bg-slate-800/50 ring-1 ring-blue-500/30',
+                  isActive && 'bg-muted ring-1 ring-blue-500/30',
                   effectiveStatus === 'completed' && 'opacity-70'
                 )}
               >
@@ -268,7 +268,7 @@ export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanel
                   <div
                     className={cn(
                       'absolute left-[23px] top-[44px] w-0.5 h-6',
-                      effectiveStatus === 'completed' ? 'bg-emerald-500/50' : 'bg-slate-700'
+                      effectiveStatus === 'completed' ? 'bg-emerald-500/50' : 'bg-border'
                     )}
                   />
                 )}
@@ -280,7 +280,7 @@ export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanel
                     effectiveStatus === 'completed' && 'bg-emerald-500/20',
                     effectiveStatus === 'in_progress' && 'bg-blue-500/20',
                     effectiveStatus === 'failed' && 'bg-red-500/20',
-                    effectiveStatus === 'pending' && 'bg-slate-700/50'
+                    effectiveStatus === 'pending' && 'bg-muted'
                   )}
                 >
                   {effectiveStatus === 'in_progress' ? (
@@ -300,10 +300,10 @@ export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanel
                   <p
                     className={cn(
                       'text-sm font-medium flex items-center',
-                      effectiveStatus === 'completed' && 'text-emerald-300',
-                      effectiveStatus === 'in_progress' && 'text-blue-300',
-                      effectiveStatus === 'failed' && 'text-red-300',
-                      effectiveStatus === 'pending' && 'text-slate-400'
+                      effectiveStatus === 'completed' && 'text-emerald-600 dark:text-emerald-300',
+                      effectiveStatus === 'in_progress' && 'text-blue-600 dark:text-blue-300',
+                      effectiveStatus === 'failed' && 'text-red-600 dark:text-red-300',
+                      effectiveStatus === 'pending' && 'text-muted-foreground'
                     )}
                   >
                     <span className="truncate">
@@ -312,7 +312,7 @@ export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanel
                     {effectiveStatus === 'in_progress' && <AnimatedDots />}
                   </p>
                   {stage.message && (
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {stage.message}
                     </p>
                   )}
@@ -333,15 +333,15 @@ export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanel
       </div>
 
       {/* Footer with overall status */}
-      <div className="p-4 border-t border-slate-700/50">
+      <div className="p-4 border-t border-border">
         <div
           className={cn(
             'p-3 rounded-lg text-center text-sm font-medium',
-            ['approved', 'completed'].includes(overallStatus) && 'bg-emerald-500/20 text-emerald-300',
-            ['rejected', 'failed'].includes(overallStatus) && 'bg-red-500/20 text-red-300',
-            overallStatus === 'pending_review' && 'bg-amber-500/20 text-amber-300',
+            ['approved', 'completed'].includes(overallStatus) && 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300',
+            ['rejected', 'failed'].includes(overallStatus) && 'bg-red-500/20 text-red-600 dark:text-red-300',
+            overallStatus === 'pending_review' && 'bg-amber-500/20 text-amber-600 dark:text-amber-300',
             !['approved', 'completed', 'rejected', 'failed', 'pending_review'].includes(overallStatus) && 
-              'bg-slate-800/50 text-slate-400'
+              'bg-muted text-muted-foreground'
           )}
         >
           {['approved', 'completed'].includes(overallStatus) && '🎉 Verification Successful!'}

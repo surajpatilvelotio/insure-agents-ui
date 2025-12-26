@@ -118,13 +118,13 @@ export default function KycChatPage() {
   }, [pendingFiles]);
 
   return (
-    <div className="fixed inset-0 top-16 flex bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 z-10">
+    <div className="fixed inset-0 top-16 flex bg-background z-10">
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="flex items-center gap-4 p-4 border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+        <header className="flex items-center gap-4 p-4 border-b border-border bg-card/50 backdrop-blur-sm">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
@@ -134,8 +134,8 @@ export default function KycChatPage() {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-slate-100">KYC Verification</h1>
-              <p className="text-xs text-slate-400">AI-powered identity verification</p>
+              <h1 className="text-lg font-semibold text-foreground">KYC Verification</h1>
+              <p className="text-xs text-muted-foreground">AI-powered identity verification</p>
             </div>
           </div>
         </header>
@@ -152,10 +152,10 @@ export default function KycChatPage() {
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center mb-6">
                 <Sparkles className="w-10 h-10 text-emerald-400" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-100 mb-2">
+              <h2 className="text-xl font-semibold text-foreground mb-2">
                 Starting Verification...
               </h2>
-              <p className="text-slate-400 max-w-md">
+              <p className="text-muted-foreground max-w-md">
                 Our AI assistant will guide you through the KYC verification process.
                 Please have your ID document ready.
               </p>
@@ -202,22 +202,22 @@ export default function KycChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+        <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
           {/* Selected Files Preview */}
           {selectedFiles.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3 max-w-4xl mx-auto">
               {selectedFiles.map((file) => (
                 <div
                   key={file.name}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/80 rounded-full border border-slate-700"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full border border-border"
                 >
                   <FileImage className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm text-slate-300 max-w-[150px] truncate">
+                  <span className="text-sm text-foreground max-w-[150px] truncate">
                     {file.name}
                   </span>
                   <button
                     onClick={() => removeFile(file.name)}
-                    className="text-slate-400 hover:text-slate-200"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -247,14 +247,14 @@ export default function KycChatPage() {
                       ? "Complete the action above to continue..." 
                       : "Type a message..."
                 }
-                className="pr-10 bg-slate-800/50 border-slate-700 focus:border-emerald-500 text-slate-100 placeholder:text-slate-500"
+                className="pr-10 bg-muted border-border focus:border-emerald-500 text-foreground placeholder:text-muted-foreground"
                 onKeyDown={handleKeyDown}
                 disabled={isStreaming || !!pendingApproval}
               />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-400 disabled:opacity-50 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 disabled:opacity-50 transition-colors"
                 disabled={isStreaming || !!pendingApproval}
                 title="Attach file"
               >

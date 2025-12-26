@@ -80,10 +80,10 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
         className={cn(
           'max-w-[75%] rounded-2xl px-4 py-3',
           isUser && 'bg-blue-600 text-white',
-          !isUser && !isSystem && 'bg-slate-800/80 text-slate-100 border border-slate-700/50',
-          isSystem && systemVariant === 'success' && 'bg-emerald-500/10 text-emerald-200 border border-emerald-500/20',
-          isSystem && systemVariant === 'error' && 'bg-red-500/10 text-red-200 border border-red-500/20',
-          isSystem && systemVariant === 'warning' && 'bg-amber-500/10 text-amber-200 border border-amber-500/20'
+          !isUser && !isSystem && 'bg-card text-card-foreground border border-border',
+          isSystem && systemVariant === 'success' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20',
+          isSystem && systemVariant === 'error' && 'bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/20',
+          isSystem && systemVariant === 'warning' && 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20'
         )}
       >
         <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -129,7 +129,7 @@ export function StreamingMessage({ text }: StreamingMessageProps) {
       </div>
 
       {/* Message Bubble */}
-      <div className="max-w-[75%] rounded-2xl px-4 py-3 bg-slate-800/80 text-slate-100 border border-slate-700/50">
+      <div className="max-w-[75%] rounded-2xl px-4 py-3 bg-card text-card-foreground border border-border">
         <p className="text-sm leading-relaxed whitespace-pre-wrap">
           {text}
           <span className="inline-block w-2 h-4 ml-1 bg-emerald-400 animate-pulse rounded-sm" />
@@ -151,7 +151,7 @@ export function TypingIndicator() {
         <Bot className="w-4 h-4 text-white" />
       </div>
       
-      <div className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50">
+      <div className="bg-card rounded-2xl px-4 py-3 border border-border">
         <div className="flex gap-1">
           {[0, 1, 2].map((i) => (
             <motion.div
