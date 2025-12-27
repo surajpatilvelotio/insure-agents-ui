@@ -11,8 +11,7 @@ import {
   ChatMessage, 
   StreamingMessage, 
   TypingIndicator,
-  StatusPanel,
-  ToolApprovalCard 
+  StatusPanel
 } from '@/components/kyc';
 import { useKycStore } from '@/store/kyc-store';
 import { useAuthStore } from '@/store/auth-store';
@@ -33,9 +32,7 @@ export default function KycChatPage() {
   const stages = useKycStore((state) => state.stages);
   const currentStage = useKycStore((state) => state.currentStage);
   const overallStatus = useKycStore((state) => state.overallStatus);
-  const pendingApproval = useKycStore((state) => state.pendingApproval);
-  const extractedData = useKycStore((state) => state.extractedData);
-  const pendingFiles = useKycStore((state) => state.pendingFiles);
+  // Note: pendingApproval/extractedData/pendingFiles are now handled inline within ChatMessage
   
 
   // Initialize session and auto-start verification
@@ -97,7 +94,7 @@ export default function KycChatPage() {
     const filesToSend = selectedFiles.length > 0 ? selectedFiles : undefined;
     setSelectedFiles([]);
     
-    const messageText = message || 'Here is my ID document';
+    const messageText = message || 'Here is my documents';
     await useKycStore.getState().sendMessage(messageText, filesToSend);
   }, [isStreaming, selectedFiles]);
 
@@ -108,14 +105,6 @@ export default function KycChatPage() {
       handleSendMessage();
     }
   }, [handleSendMessage]);
-
-  // Handle file change in approval card
-  const handleFilesChange = useCallback((files: File[]) => {
-    const { removePendingFile, addPendingFile } = useKycStore.getState();
-    // Clear existing and add new files
-    pendingFiles.forEach(f => removePendingFile(f.name));
-    files.forEach(f => addPendingFile(f));
-  }, [pendingFiles]);
 
   return (
     <div className="fixed inset-0 top-16 flex bg-background z-10">
@@ -182,21 +171,8 @@ export default function KycChatPage() {
             <TypingIndicator />
           )}
 
-          {/* Human-in-the-Loop Approval Card */}
-          {pendingApproval && (
-            <ToolApprovalCard
-              approval={pendingApproval}
-              extractedData={extractedData}
-              pendingFiles={pendingFiles}
-              onFilesChange={handleFilesChange}
-              onApprove={
-                pendingApproval.type === 'file_upload' 
-                  ? () => useKycStore.getState().approveAndUpload() 
-                  : () => useKycStore.getState().confirmData()
-              }
-              disabled={isStreaming}
-            />
-          )}
+          {/* Note: Action components are now rendered inline within ChatMessage */}
+          {/* The ToolApprovalCard is no longer needed here */}
 
           <div ref={messagesEndRef} />
         </div>
@@ -243,19 +219,17 @@ export default function KycChatPage() {
                 placeholder={
                   selectedFiles.length > 0
                     ? "Add a message or click send to upload..."
-                    : pendingApproval 
-                      ? "Complete the action above to continue..." 
-                      : "Type a message..."
+                    : "Type a message..."
                 }
                 className="pr-10 bg-muted border-border focus:border-emerald-500 text-foreground placeholder:text-muted-foreground"
                 onKeyDown={handleKeyDown}
-                disabled={isStreaming || !!pendingApproval}
+                disabled={isStreaming}
               />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-emerald-400 disabled:opacity-50 transition-colors"
-                disabled={isStreaming || !!pendingApproval}
+                disabled={isStreaming}
                 title="Attach file"
               >
                 <Paperclip className="w-4 h-4" />
@@ -263,7 +237,7 @@ export default function KycChatPage() {
             </div>
             <Button
               onClick={handleSendMessage}
-              disabled={isStreaming || !!pendingApproval}
+              disabled={isStreaming}
               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
             >
               <Send className="w-4 h-4" />

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Shield, Loader2, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Shield, Loader2, CheckCircle2, Phone, Send, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,10 @@ const passwordRequirements = [
   { regex: /[0-9]/, label: 'One number' },
 ];
 
+// Mock OTP validation - valid OTPs are "123456" and "000000"
+const VALID_OTPS = ['123456', '000000'];
+const OTP_EXPIRY_SECONDS = 120; // 2 minutes
+
 export function SignupForm() {
   const { signup, isSubmitting, error, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +36,83 @@ export function SignupForm() {
     confirmPassword: '',
   });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  
+  // OTP state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpCountdown, setOtpCountdown] = useState(0);
+  
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (otpCountdown > 0) {
+      const timer = setTimeout(() => setOtpCountdown(otpCountdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpCountdown]);
+  
+  // Reset OTP state when phone number changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // Only reset if OTP was already sent or verified
+    setOtpSent(false);
+    setPhoneVerified(false);
+    setOtpValue('');
+    setOtpError('');
+  }, [formData.phone]);
+  
+  const isValidPhoneNumber = (phone: string) => {
+    // Basic phone validation - at least 10 digits
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length >= 10;
+  };
+  
+  const handleSendOtp = async () => {
+    if (!isValidPhoneNumber(formData.phone)) {
+      setValidationErrors(prev => ({ ...prev, phone: 'Please enter a valid phone number' }));
+      return;
+    }
+    
+    setSendingOtp(true);
+    setOtpError('');
+    
+    // Mock API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    setSendingOtp(false);
+    setOtpSent(true);
+    setOtpCountdown(OTP_EXPIRY_SECONDS);
+  };
+  
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) {
+      setOtpError('Please enter a 6-digit OTP');
+      return;
+    }
+    
+    setVerifyingOtp(true);
+    setOtpError('');
+    
+    // Mock API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    if (VALID_OTPS.includes(otpValue)) {
+      setPhoneVerified(true);
+      setOtpError('');
+    } else {
+      setOtpError('Invalid OTP. Please try again. (Hint: Use 123456 or 000000)');
+    }
+    
+    setVerifyingOtp(false);
+  };
+  
+  const handleResendOtp = async () => {
+    if (otpCountdown > 0) return;
+    await handleSendOtp();
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -155,36 +236,118 @@ export function SignupForm() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    placeholder="+1-555-0100"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className={validationErrors.phone ? 'border-destructive' : ''}
-                  />
-                  {validationErrors.phone && (
-                    <p className="text-xs text-destructive">{validationErrors.phone}</p>
+              {/* Phone Number with OTP Verification */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      placeholder="+1-555-0100"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      disabled={phoneVerified}
+                      className={`pl-9 ${validationErrors.phone ? 'border-destructive' : ''} ${phoneVerified ? 'border-accent bg-accent/5' : ''}`}
+                    />
+                    {phoneVerified && (
+                      <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
+                    )}
+                  </div>
+                  {!phoneVerified && (
+                    <Button
+                      type="button"
+                      variant={otpSent ? 'outline' : 'default'}
+                      size="sm"
+                      onClick={handleSendOtp}
+                      disabled={sendingOtp || !formData.phone || (otpSent && otpCountdown > 0)}
+                      className="whitespace-nowrap"
+                    >
+                      {sendingOtp ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : otpSent ? (
+                        otpCountdown > 0 ? `Resend (${otpCountdown}s)` : 'Resend OTP'
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-1" />
+                          Send OTP
+                        </>
+                      )}
+                    </Button>
                   )}
                 </div>
+                {validationErrors.phone && (
+                  <p className="text-xs text-destructive">{validationErrors.phone}</p>
+                )}
+                
+                {/* OTP Input - shown after sending OTP */}
+                {otpSent && !phoneVerified && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mt-3 p-3 rounded-lg bg-muted/50 border border-border"
+                  >
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Enter the 6-digit code sent to your phone
+                    </p>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="000000"
+                        value={otpValue}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          setOtpValue(value);
+                          setOtpError('');
+                        }}
+                        maxLength={6}
+                        className={`text-center text-lg tracking-widest font-mono ${otpError ? 'border-destructive' : ''}`}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        disabled={verifyingOtp || otpValue.length !== 6}
+                      >
+                        {verifyingOtp ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Verify'
+                        )}
+                      </Button>
+                    </div>
+                    {otpError && (
+                      <p className="text-xs text-destructive mt-2">{otpError}</p>
+                    )}
+                  </motion.div>
+                )}
+                
+                {/* Phone Verified Badge */}
+                {phoneVerified && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-2 text-sm text-accent"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Phone number verified
+                  </motion.div>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    className={validationErrors.dateOfBirth ? 'border-destructive' : ''}
-                  />
-                  {validationErrors.dateOfBirth && (
-                    <p className="text-xs text-destructive">{validationErrors.dateOfBirth}</p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className={validationErrors.dateOfBirth ? 'border-destructive' : ''}
+                />
+                {validationErrors.dateOfBirth && (
+                  <p className="text-xs text-destructive">{validationErrors.dateOfBirth}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -251,11 +414,21 @@ export function SignupForm() {
                 )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting || !phoneVerified}
+                title={!phoneVerified ? 'Please verify your phone number first' : undefined}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating account...
+                  </>
+                ) : !phoneVerified ? (
+                  <>
+                    <Phone className="mr-2 h-4 w-4" />
+                    Verify Phone to Continue
                   </>
                 ) : (
                   'Create Account'

@@ -4,7 +4,8 @@ import type {
   KycStage, 
   ToolApproval, 
   ExtractedData,
-  KycProgress 
+  KycProgress,
+  UiAction
 } from '@/types/kyc';
 import { 
   getOrCreateSessionId,
@@ -14,6 +15,7 @@ import {
   subscribeToStatus,
   type ChatStreamCallbacks 
 } from '@/api/kyc';
+import { parseUiAction } from '@/lib/parse-action';
 
 interface KycState {
   // Session
@@ -92,19 +94,8 @@ export const useKycStore = create<KycState>((set, get) => {
     },
     onToolCall: (toolName, toolId) => {
       console.log(`Tool called: ${toolName} (${toolId})`);
-      
-      // Detect human-in-the-loop triggers
-      if (toolName === 'upload_kyc_document' || toolName.includes('document')) {
-        set({
-          pendingApproval: {
-            id: toolId,
-            type: 'file_upload',
-            title: 'Upload Document Required',
-            description: 'Please upload your ID document to continue verification.',
-            pending: true,
-          },
-        });
-      }
+      // Note: pendingApproval is now set based on parsed UI_ACTION markers
+      // from agent messages, not from tool calls
     },
     onToolResult: (toolId, success) => {
       console.log(`Tool result: ${toolId} - ${success ? 'success' : 'failed'}`);
@@ -116,12 +107,9 @@ export const useKycStore = create<KycState>((set, get) => {
       }
     },
     onDocumentUploaded: (filename, success, error) => {
-      if (success) {
-        get().addMessage({
-          role: 'system',
-          content: `Document "${filename}" uploaded successfully.`,
-        });
-      } else {
+      // Success message removed - the upload component already shows "Documents Uploaded"
+      // Only show error messages if upload fails
+      if (!success) {
         get().addMessage({
           role: 'system',
           content: `Failed to upload "${filename}": ${error || 'Unknown error'}`,
@@ -152,19 +140,8 @@ export const useKycStore = create<KycState>((set, get) => {
           useAuthStore.getState().updateKycStatus('rejected');
         });
       }
-      
-      // Check if agent is asking for data confirmation
-      if (progress.current_stage === 'user_review') {
-        set({
-          pendingApproval: {
-            id: `confirm-${Date.now()}`,
-            type: 'confirm_data',
-            title: 'Confirm Extracted Data',
-            description: 'Please review the extracted information and confirm it is correct.',
-            pending: true,
-          },
-        });
-      }
+      // Note: pendingApproval for data confirmation is now set based on
+      // parsed UI_ACTION markers from agent messages
     },
     onStop: (reason) => {
       get().finalizeStreamingMessage();
@@ -278,10 +255,41 @@ export const useKycStore = create<KycState>((set, get) => {
     finalizeStreamingMessage: () => {
       const { currentStreamingText } = get();
       if (currentStreamingText.trim()) {
+        // Parse UI action markers from the message
+        const { text, action } = parseUiAction(currentStreamingText);
+        
         get().addMessage({
           role: 'assistant',
-          content: currentStreamingText,
+          content: text,
+          action: action || undefined,
         });
+        
+        // Set pending approval based on parsed action
+        if (action) {
+          if (action.type === 'file_upload') {
+            set({
+              pendingApproval: {
+                id: `action-${Date.now()}`,
+                type: 'file_upload',
+                title: action.title,
+                description: action.description || 'Please upload your document',
+                pending: true,
+              },
+            });
+          } else if (action.type === 'confirm_data') {
+            set({
+              pendingApproval: {
+                id: `action-${Date.now()}`,
+                type: 'confirm_data',
+                title: action.title,
+                description: action.description || 'Please confirm the extracted data',
+                data: action.data,
+                pending: true,
+              },
+              extractedData: action.data as ExtractedData,
+            });
+          }
+        }
       }
       set({ currentStreamingText: '' });
     },
@@ -328,7 +336,7 @@ export const useKycStore = create<KycState>((set, get) => {
 
       set({ pendingApproval: null });
       
-      await sendMessage('Here is my ID document', pendingFiles);
+      await sendMessage('Here is my documents', pendingFiles);
       
       set({ pendingFiles: [] });
     },

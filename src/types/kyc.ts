@@ -17,12 +17,34 @@ export interface KycProgress {
   documents_uploaded?: number;
 }
 
+// UI Action Types - for interactive components in chat
+export type UiActionType = 'file_upload' | 'confirm_data' | 'info';
+
+// Per-document extracted data for display
+export interface DocumentExtractedData {
+  filename: string;
+  document_type?: string;
+  data: Record<string, unknown>;
+}
+
+export interface UiAction {
+  type: UiActionType;
+  title: string;
+  description?: string;
+  data?: Record<string, unknown>;  // Merged data for confirmation
+  documents?: DocumentExtractedData[];  // Per-document data for display
+  accept?: string[];
+  maxFiles?: number;
+  variant?: 'info' | 'warning' | 'success';
+}
+
 export interface KycMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
+  action?: UiAction; // Parsed action from message for rendering interactive components
 }
 
 export type ToolApprovalType = 'file_upload' | 'confirm_data' | 'verification_confirm';

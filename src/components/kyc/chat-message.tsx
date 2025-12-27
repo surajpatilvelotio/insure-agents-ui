@@ -1,9 +1,12 @@
 'use client';
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, User, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { stripUiAction } from '@/lib/parse-action';
 import type { KycMessage } from '@/types/kyc';
+import { FileUploadAction, ConfirmDataAction } from './inline-actions';
 
 interface ChatMessageProps {
   message: KycMessage;
@@ -35,9 +38,13 @@ function getSystemMessageVariant(content: string): 'success' | 'error' | 'warnin
 export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
+  const isAssistant = message.role === 'assistant';
   
   // Determine system message styling variant
   const systemVariant = isSystem ? getSystemMessageVariant(message.content) : null;
+  
+  // Check if this message has an action component
+  const hasAction = isAssistant && message.action;
 
   return (
     <motion.div
@@ -75,36 +82,66 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
         )}
       </div>
 
-      {/* Message Bubble */}
-      <div
-        className={cn(
-          'max-w-[75%] rounded-2xl px-4 py-3',
-          isUser && 'bg-blue-600 text-white',
-          !isUser && !isSystem && 'bg-card text-card-foreground border border-border',
-          isSystem && systemVariant === 'success' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20',
-          isSystem && systemVariant === 'error' && 'bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/20',
-          isSystem && systemVariant === 'warning' && 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20'
-        )}
-      >
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-          {message.content}
-          {isStreaming && (
-            <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
-          )}
-        </p>
-        
-        {/* Timestamp */}
-        <p
+      {/* Message Content Container */}
+      <div className={cn('flex flex-col', isUser ? 'items-end' : 'items-start', 'max-w-[80%]')}>
+        {/* Message Bubble - now contains both text AND action component */}
+        <div
           className={cn(
-            'text-[10px] mt-1 opacity-60',
-            isUser ? 'text-right' : 'text-left'
+            'rounded-2xl overflow-hidden',
+            isUser && 'bg-blue-600 text-white',
+            !isUser && !isSystem && 'bg-card text-card-foreground border border-border',
+            isSystem && systemVariant === 'success' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20',
+            isSystem && systemVariant === 'error' && 'bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/20',
+            isSystem && systemVariant === 'warning' && 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20'
           )}
         >
-          {message.timestamp.toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })}
-        </p>
+          {/* Text Content */}
+          <div className="px-4 py-3">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {message.content}
+              {isStreaming && (
+                <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
+              )}
+            </p>
+            
+            {/* Timestamp - only show if no action, otherwise show at bottom */}
+            {!hasAction && (
+              <p
+                className={cn(
+                  'text-[10px] mt-1 opacity-60',
+                  isUser ? 'text-right' : 'text-left'
+                )}
+              >
+                {message.timestamp.toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </p>
+            )}
+          </div>
+
+          {/* Inline Action Component - inside the message bubble */}
+          {hasAction && message.action && (
+            <div className="border-t border-border">
+              {message.action.type === 'file_upload' && (
+                <FileUploadAction action={message.action} embedded />
+              )}
+              {message.action.type === 'confirm_data' && (
+                <ConfirmDataAction action={message.action} embedded />
+              )}
+              
+              {/* Timestamp at bottom of action */}
+              <div className="px-4 pb-2">
+                <p className="text-[10px] opacity-60 text-left">
+                  {message.timestamp.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -115,7 +152,10 @@ interface StreamingMessageProps {
 }
 
 export function StreamingMessage({ text }: StreamingMessageProps) {
-  if (!text) return null;
+  // Filter out action markers and system context from streaming text
+  const displayText = useMemo(() => stripUiAction(text), [text]);
+  
+  if (!displayText) return null;
 
   return (
     <motion.div
@@ -131,7 +171,7 @@ export function StreamingMessage({ text }: StreamingMessageProps) {
       {/* Message Bubble */}
       <div className="max-w-[75%] rounded-2xl px-4 py-3 bg-card text-card-foreground border border-border">
         <p className="text-sm leading-relaxed whitespace-pre-wrap">
-          {text}
+          {displayText}
           <span className="inline-block w-2 h-4 ml-1 bg-emerald-400 animate-pulse rounded-sm" />
         </p>
       </div>

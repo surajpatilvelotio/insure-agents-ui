@@ -5,6 +5,11 @@ import type { KycProgress } from '@/types/kyc';
 // TODO: To persist sessions across page refreshes, change CLEAR_SESSION_ON_REFRESH to false
 const CLEAR_SESSION_ON_REFRESH = true; // Set to false to persist session across refreshes
 
+// NOTE: Even with CLEAR_SESSION_ON_REFRESH = true, the backend may reuse existing
+// applications for the same user. To fully reset for testing:
+// 1. Delete the backend's sessions/ folder
+// 2. Or complete/reject the existing KYC application in the database
+
 // Get or create session ID for a user
 export function getOrCreateSessionId(userId: string): string {
   const storageKey = `kyc-session-${userId}`;
