@@ -72,7 +72,10 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
     
     // Send files in background - UI already shows success
     try {
-      await useKycStore.getState().sendMessage('Here is my documents', files);
+      const messageText = files.length === 1 
+        ? 'Here is my document' 
+        : `Here are my ${files.length} documents`;
+      await useKycStore.getState().sendMessage(messageText, files);
     } catch (error) {
       console.error('Upload failed:', error);
       // Could revert state here if needed, but upload rarely fails
@@ -83,13 +86,14 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
   if (embedded) {
     // Completed state - show uploaded files with success message
     if (isCompleted && uploadedFiles.length > 0) {
+      const uploadLabel = uploadedFiles.length === 1 ? 'Document Uploaded' : 'Documents Uploaded';
       return (
         <div className="p-4">
           <div className="bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/20">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="w-4 h-4 text-emerald-500" />
               <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                Documents Uploaded
+                {uploadLabel}
               </span>
             </div>
             <div className="space-y-1">
@@ -138,6 +142,11 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
           <p className="text-sm font-medium">
             {isDragging ? 'Drop files here' : 'Click or drag to upload'}
           </p>
+          {action.description && (
+            <p className="text-xs text-primary/80 mt-1">
+              {action.description}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground mt-1">
             PNG, JPG, or PDF (max {maxFiles} files)
           </p>
@@ -203,6 +212,7 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
   
   // Completed state for standalone mode
   if (isCompleted && uploadedFiles.length > 0) {
+    const standaloneUploadLabel = uploadedFiles.length === 1 ? 'Document Uploaded' : 'Documents Uploaded';
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -216,7 +226,7 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                Documents Uploaded
+                {standaloneUploadLabel}
               </h4>
             </div>
           </div>
@@ -289,6 +299,11 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
             <p className="text-sm text-foreground font-medium">
               {isDragging ? 'Drop files here' : 'Click or drag to upload'}
             </p>
+            {action.description && (
+              <p className="text-xs text-primary/80 mt-1">
+                {action.description}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               PNG, JPG, or PDF (max {maxFiles} files)
             </p>

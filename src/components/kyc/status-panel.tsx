@@ -140,9 +140,6 @@ function AnimatedDots() {
 }
 
 export function StatusPanel({ stages, currentStage, overallStatus }: StatusPanelProps) {
-  // Debug: log current stage for troubleshooting
-  console.log('[StatusPanel] currentStage:', currentStage, 'stages:', stages.map(s => `${s.stage_name}:${s.status}`));
-  
   // Default stages - always show all of these
   const defaultStages: KycStage[] = [
     { stage_name: 'ocr_processing', status: 'pending' },

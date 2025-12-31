@@ -18,7 +18,12 @@ export interface KycProgress {
 }
 
 // UI Action Types - for interactive components in chat
-export type UiActionType = 'file_upload' | 'confirm_data' | 'info';
+export type UiActionType = 
+  | 'file_upload' 
+  | 'confirm_data' 
+  | 'info' 
+  | 'additional_docs_request'  // For non-resident users needing extra documents
+  | 'live_photo';              // For liveness verification selfie capture
 
 // Per-document extracted data for display
 export interface DocumentExtractedData {
@@ -26,6 +31,9 @@ export interface DocumentExtractedData {
   document_type?: string;
   data: Record<string, unknown>;
 }
+
+// Required document types for additional verification
+export type AdditionalDocType = 'passport' | 'visa' | 'live_photo' | 'work_permit' | 'proof_of_address';
 
 export interface UiAction {
   type: UiActionType;
@@ -36,6 +44,9 @@ export interface UiAction {
   accept?: string[];
   maxFiles?: number;
   variant?: 'info' | 'warning' | 'success';
+  // For additional_docs_request
+  nationality?: string;  // User's detected nationality
+  required_docs?: AdditionalDocType[];  // List of required document types
 }
 
 export interface KycMessage {

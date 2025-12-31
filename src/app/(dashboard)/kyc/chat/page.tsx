@@ -94,8 +94,14 @@ export default function KycChatPage() {
     const filesToSend = selectedFiles.length > 0 ? selectedFiles : undefined;
     setSelectedFiles([]);
     
-    const messageText = message || 'Here is my documents';
-    await useKycStore.getState().sendMessage(messageText, filesToSend);
+    // Generate appropriate message based on file count
+    let messageText = message;
+    if (!messageText && filesToSend) {
+      messageText = filesToSend.length === 1 
+        ? 'Here is my document' 
+        : `Here are my ${filesToSend.length} documents`;
+    }
+    await useKycStore.getState().sendMessage(messageText || '', filesToSend);
   }, [isStreaming, selectedFiles]);
 
   // Handle Enter key

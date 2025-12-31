@@ -6,7 +6,7 @@ import { Bot, User, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stripUiAction } from '@/lib/parse-action';
 import type { KycMessage } from '@/types/kyc';
-import { FileUploadAction, ConfirmDataAction } from './inline-actions';
+import { FileUploadAction, ConfirmDataAction, AdditionalDocsRequest } from './inline-actions';
 
 interface ChatMessageProps {
   message: KycMessage;
@@ -128,6 +128,9 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
               )}
               {message.action.type === 'confirm_data' && (
                 <ConfirmDataAction action={message.action} embedded />
+              )}
+              {message.action.type === 'additional_docs_request' && (
+                <AdditionalDocsRequest action={message.action} embedded />
               )}
               
               {/* Timestamp at bottom of action */}

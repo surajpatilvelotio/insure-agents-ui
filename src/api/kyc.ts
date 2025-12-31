@@ -128,9 +128,10 @@ export async function sendChatMessage(options: {
   sessionId: string;
   userId?: string;
   documents?: File[];
+  documentTypes?: string[];  // Optional array of document types matching documents order
   callbacks: ChatStreamCallbacks;
 }): Promise<void> {
-  const { message, sessionId, userId, documents, callbacks } = options;
+  const { message, sessionId, userId, documents, documentTypes, callbacks } = options;
 
   const formData = new FormData();
   formData.append('message', message);
@@ -143,6 +144,11 @@ export async function sendChatMessage(options: {
   if (documents && documents.length > 0) {
     for (const doc of documents) {
       formData.append('documents', doc);
+    }
+    
+    // Pass document types as JSON array if provided
+    if (documentTypes && documentTypes.length > 0) {
+      formData.append('document_types', JSON.stringify(documentTypes));
     }
   }
 

@@ -10,57 +10,47 @@ import { useKycStore } from '@/store/kyc-store';
 interface ConfirmDataActionProps {
   action: UiAction;
   disabled?: boolean;
-  embedded?: boolean; // When true, renders without outer card (for embedding in message bubble)
+  embedded?: boolean;
 }
 
-// Format field names for display
 function formatFieldName(key: string): string {
   return key
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-// Format value for display - handles objects, arrays, and special values
 function formatValue(value: unknown): string | null {
-  // Skip null/undefined
   if (value === null || value === undefined) return null;
   
-  // Skip "UNREADABLE" and similar placeholder values
   const strValue = String(value).trim().toUpperCase();
-  if (strValue === 'UNREADABLE' || strValue === 'N/A' || strValue === 'UNKNOWN' || strValue === '') {
-    return null;
-  }
+  if (['UNREADABLE', 'N/A', 'UNKNOWN', ''].includes(strValue)) return null;
   
-  // Handle objects and arrays - skip them (don't show [object Object])
   if (typeof value === 'object') {
-    // If it's an array of strings, join them
     if (Array.isArray(value)) {
       const validItems = value.filter(v => typeof v === 'string' || typeof v === 'number');
       return validItems.length > 0 ? validItems.join(', ') : null;
     }
-    // Skip nested objects
     return null;
   }
   
   return String(value);
 }
 
-// Filter and prepare fields for display
-function getDisplayFields(data: Record<string, unknown>): Array<[string, string]> {
+function getDisplayFields(data: Record<string, unknown> | null | undefined): Array<[string, string]> {
+  if (!data) return [];
   return Object.entries(data)
     .filter(([key]) => key !== 'document_type' && !key.startsWith('_'))
     .map(([key, value]) => [key, formatValue(value)] as [string, string | null])
     .filter((entry): entry is [string, string] => entry[1] !== null);
 }
 
-// Render a single data section
 function DataSection({ 
   title, 
   data, 
   showTitle = false 
 }: { 
   title?: string; 
-  data: Record<string, unknown>; 
+  data: Record<string, unknown> | null | undefined; 
   showTitle?: boolean;
 }) {
   const displayFields = getDisplayFields(data);
@@ -133,24 +123,31 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
     }
   };
 
-  // Filter out internal fields for display (merged data fallback)
   const displayFields = mergedData ? getDisplayFields(mergedData) : [];
 
-  // Embedded mode - simpler styling for inside message bubble
+  const hasValidDocumentData = documents && documents.some(doc => {
+    const docData = doc.data || (doc as Record<string, unknown>).extracted_data as Record<string, unknown>;
+    return docData && Object.keys(docData).length > 0;
+  });
+  
+  const showPerDocumentView = hasMultipleDocuments && hasValidDocumentData;
+
   if (embedded) {
     return (
       <div className="p-4">
-        {/* Show per-document data if multiple documents */}
-        {hasMultipleDocuments ? (
+        {showPerDocumentView ? (
           <div className="space-y-3 mb-3">
-            {documents.map((doc, index) => (
-              <DataSection
-                key={doc.filename || index}
-                title={doc.filename || `Document ${index + 1}`}
-                data={doc.data}
-                showTitle={true}
-              />
-            ))}
+            {documents!.map((doc, index) => {
+              const docData = doc.data || (doc as Record<string, unknown>).extracted_data as Record<string, unknown>;
+              return (
+                <DataSection
+                  key={doc.filename || index}
+                  title={doc.filename || `Document ${index + 1}`}
+                  data={docData}
+                  showTitle={true}
+                />
+              );
+            })}
           </div>
         ) : displayFields.length > 0 ? (
           <div className="bg-muted/50 rounded-lg p-3 space-y-2 mb-3">
@@ -171,7 +168,6 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
           </p>
         )}
 
-        {/* Action Buttons */}
         {!decision && (
           <div className="flex gap-2">
             <Button
@@ -204,7 +200,6 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
           </div>
         )}
 
-        {/* Decision Made Indicator */}
         {decision && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -232,7 +227,6 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
     );
   }
 
-  // Standalone mode - full card styling
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -240,7 +234,6 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
       className="mt-3 max-w-md"
     >
       <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-        {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-emerald-500/5">
           <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
             <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -257,19 +250,20 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
           </div>
         </div>
 
-        {/* Data Fields */}
         <div className="p-4">
-          {/* Show per-document data if multiple documents */}
-          {hasMultipleDocuments ? (
+          {showPerDocumentView ? (
             <div className="space-y-3">
-              {documents.map((doc, index) => (
-                <DataSection
-                  key={doc.filename || index}
-                  title={doc.filename || `Document ${index + 1}`}
-                  data={doc.data}
-                  showTitle={true}
-                />
-              ))}
+              {documents!.map((doc, index) => {
+                const docData = doc.data || (doc as Record<string, unknown>).extracted_data as Record<string, unknown>;
+                return (
+                  <DataSection
+                    key={doc.filename || index}
+                    title={doc.filename || `Document ${index + 1}`}
+                    data={docData}
+                    showTitle={true}
+                  />
+                );
+              })}
             </div>
           ) : displayFields.length > 0 ? (
             <div className="bg-muted rounded-lg p-3 space-y-2">
@@ -290,7 +284,6 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
             </p>
           )}
 
-          {/* Action Buttons */}
           {!decision && (
             <div className="flex gap-3 mt-4">
               <Button
@@ -321,7 +314,6 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
             </div>
           )}
 
-          {/* Decision Made Indicator */}
           {decision && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}

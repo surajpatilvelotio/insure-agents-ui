@@ -47,7 +47,7 @@ interface KycState {
   // Actions
   initSession: (userId: string) => void;
   startKycVerification: () => Promise<void>;
-  sendMessage: (message: string, documents?: File[]) => Promise<void>;
+  sendMessage: (message: string, documents?: File[], documentTypes?: string[]) => Promise<void>;
   addMessage: (message: Omit<KycMessage, 'id' | 'timestamp'>) => void;
   updateStreamingText: (text: string) => void;
   finalizeStreamingMessage: () => void;
@@ -88,27 +88,28 @@ export const useKycStore = create<KycState>((set, get) => {
       set({ sessionId });
     },
     onText: (text) => {
-      set((state) => ({
-        currentStreamingText: state.currentStreamingText + text,
-      }));
+      set((state) => {
+        let current = state.currentStreamingText;
+        if (current && /[.!?]$/.test(current) && /^[A-Za-z]/.test(text)) {
+          current = current + ' ';
+        }
+        return { currentStreamingText: current + text };
+      });
     },
     onToolCall: (toolName, toolId) => {
-      console.log(`Tool called: ${toolName} (${toolId})`);
-      // Note: pendingApproval is now set based on parsed UI_ACTION markers
-      // from agent messages, not from tool calls
+      const { currentStreamingText } = get();
+      if (currentStreamingText.trim()) {
+        get().finalizeStreamingMessage();
+        set({ currentStreamingText: '' });
+      }
     },
     onToolResult: (toolId, success) => {
-      console.log(`Tool result: ${toolId} - ${success ? 'success' : 'failed'}`);
-      
-      // Clear pending approval if tool completed
       const { pendingApproval } = get();
       if (pendingApproval?.id === toolId) {
         set({ pendingApproval: null });
       }
     },
     onDocumentUploaded: (filename, success, error) => {
-      // Success message removed - the upload component already shows "Documents Uploaded"
-      // Only show error messages if upload fails
       if (!success) {
         get().addMessage({
           role: 'system',
@@ -124,14 +125,11 @@ export const useKycStore = create<KycState>((set, get) => {
         stages: progress.stages,
       });
       
-      // Subscribe to status updates if we have an application ID
       if (progress.application_id && !get().statusUnsubscribe) {
         get().subscribeToStatusUpdates(progress.application_id);
       }
       
-      // Update auth store when KYC status changes (approved/rejected)
       if (['approved', 'completed'].includes(progress.status)) {
-        // Import dynamically to avoid circular dependency
         import('@/store/auth-store').then(({ useAuthStore }) => {
           useAuthStore.getState().updateKycStatus('approved');
         });
@@ -140,8 +138,6 @@ export const useKycStore = create<KycState>((set, get) => {
           useAuthStore.getState().updateKycStatus('rejected');
         });
       }
-      // Note: pendingApproval for data confirmation is now set based on
-      // parsed UI_ACTION markers from agent messages
     },
     onStop: (reason) => {
       get().finalizeStreamingMessage();
@@ -152,16 +148,11 @@ export const useKycStore = create<KycState>((set, get) => {
     },
     onError: (error) => {
       console.error(`KYC Error: ${error}`);
-      // Don't show network errors that happen at stream end
       if (!error.toLowerCase().includes('network') && 
           !error.toLowerCase().includes('aborted') &&
           !error.toLowerCase().includes('incomplete')) {
-        get().addMessage({
-          role: 'system',
-          content: `Error: ${error}`,
-        });
+        get().addMessage({ role: 'system', content: `Error: ${error}` });
       }
-      // Still finalize any streaming message
       get().finalizeStreamingMessage();
       set({ isStreaming: false });
     },
@@ -175,13 +166,8 @@ export const useKycStore = create<KycState>((set, get) => {
     ...initialState,
 
     initSession: (userId) => {
-      // TODO: When CLEAR_SESSION_ON_REFRESH is set to false in api/kyc.ts,
-      // this will reuse existing session. You may also want to:
-      // 1. Load existing messages from backend/localStorage
-      // 2. Fetch current KYC status to restore stages
-      // 3. Skip calling startKycVerification if session already exists
+      // TODO: Load existing messages from backend/localStorage when persisting sessions
       const sessionId = getOrCreateSessionId(userId);
-      
       set({
         sessionId,
         userId,
@@ -211,7 +197,7 @@ export const useKycStore = create<KycState>((set, get) => {
       await startVerification(userId, sessionId, createCallbacks());
     },
 
-    sendMessage: async (message, documents) => {
+    sendMessage: async (message, documents, documentTypes) => {
       const { sessionId, userId } = get();
       if (!sessionId) {
         console.error('Session not initialized');
@@ -231,6 +217,7 @@ export const useKycStore = create<KycState>((set, get) => {
         sessionId,
         userId: userId || undefined,
         documents,
+        documentTypes,
         callbacks: createCallbacks(),
       });
     },
@@ -247,24 +234,25 @@ export const useKycStore = create<KycState>((set, get) => {
     },
 
     updateStreamingText: (text) => {
-      set((state) => ({
-        currentStreamingText: state.currentStreamingText + text,
-      }));
+      set((state) => {
+        let current = state.currentStreamingText;
+        if (current && /[.!?]$/.test(current) && /^[A-Za-z]/.test(text)) {
+          current = current + ' ';
+        }
+        return { currentStreamingText: current + text };
+      });
     },
 
     finalizeStreamingMessage: () => {
       const { currentStreamingText } = get();
       if (currentStreamingText.trim()) {
-        // Parse UI action markers from the message
         const { text, action } = parseUiAction(currentStreamingText);
-        
         get().addMessage({
           role: 'assistant',
           content: text,
           action: action || undefined,
         });
         
-        // Set pending approval based on parsed action
         if (action) {
           if (action.type === 'file_upload') {
             set({
@@ -336,7 +324,11 @@ export const useKycStore = create<KycState>((set, get) => {
 
       set({ pendingApproval: null });
       
-      await sendMessage('Here is my documents', pendingFiles);
+      const fileCount = pendingFiles.length;
+      const messageText = fileCount === 1 
+        ? 'Here is my document' 
+        : `Here are my ${fileCount} documents`;
+      await sendMessage(messageText, pendingFiles);
       
       set({ pendingFiles: [] });
     },
@@ -350,7 +342,6 @@ export const useKycStore = create<KycState>((set, get) => {
     },
 
     subscribeToStatusUpdates: (applicationId) => {
-      // Clean up existing subscription
       get().unsubscribeFromStatus();
 
       const unsubscribe = subscribeToStatus(applicationId, {
@@ -378,9 +369,7 @@ export const useKycStore = create<KycState>((set, get) => {
     },
 
     reset: () => {
-      // Clear localStorage session when resetting
-      // TODO: When persisting sessions, you may want to keep the session
-      // and only clear on explicit user action (e.g., "Start New Verification")
+      // TODO: Keep session on explicit user action when persisting sessions
       const { userId } = get();
       if (userId) {
         clearUserSession(userId);
