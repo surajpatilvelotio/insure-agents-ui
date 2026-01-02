@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Shield, LayoutDashboard, FileText, User, Settings, LogOut, Moon, Sun, Bell, ChevronDown } from 'lucide-react';
+import { Shield, LayoutDashboard, FileText, User, Settings, LogOut, Moon, Sun, Bell, ChevronDown, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -20,6 +20,8 @@ import { useState, useEffect } from 'react';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/policies', label: 'My Policies', icon: FileText },
+  // Hidden for now - will use later
+  // { href: '/manual-review', label: 'Manual Review', icon: ClipboardCheck },
 ];
 
 export function DashboardNav() {

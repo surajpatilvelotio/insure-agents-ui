@@ -39,6 +39,9 @@ export function Header() {
             <Link href="#about" className="text-muted-foreground hover:text-foreground transition-colors">
               About Us
             </Link>
+            <Link href="/manual-review" className="text-muted-foreground hover:text-foreground transition-colors">
+              Manual Review
+            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -107,6 +110,13 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 About Us
+              </Link>
+              <Link
+                href="/manual-review"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Manual Review
               </Link>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
