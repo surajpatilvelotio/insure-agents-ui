@@ -1,12 +1,105 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, FileImage, CheckCircle } from 'lucide-react';
+import { Upload, X, FileImage, CheckCircle, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { UiAction } from '@/types/kyc';
 import { useKycStore } from '@/store/kyc-store';
+
+// Declaration Modal Component
+function DeclarationModal({ isOpen, onClose, onAccept }: { isOpen: boolean; onClose: () => void; onAccept: () => void }) {
+  const [hasScrolledToEnd, setHasScrolledToEnd] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  // Reset scroll state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setHasScrolledToEnd(false);
+    }
+  }, [isOpen]);
+  
+  const handleScroll = useCallback(() => {
+    if (contentRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
+      // Consider "scrolled to end" when within 20px of the bottom
+      if (scrollHeight - scrollTop - clientHeight < 20) {
+        setHasScrolledToEnd(true);
+      }
+    }
+  }, []);
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-card border border-border rounded-xl w-full max-w-lg max-h-[80vh] overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 py-4 border-b border-border bg-muted/30">
+          <h3 className="text-lg font-semibold text-foreground">Declaration & Consent</h3>
+          <p className="text-xs text-muted-foreground mt-1">Please read the entire declaration to continue</p>
+        </div>
+        <div 
+          ref={contentRef}
+          onScroll={handleScroll}
+          className="p-6 overflow-y-auto max-h-[50vh] space-y-4 text-sm text-muted-foreground"
+        >
+          <p className="font-medium text-foreground">By submitting your documents, you declare and agree that:</p>
+          <ol className="list-decimal list-inside space-y-3">
+            <li>All information and documents provided are true, accurate, and complete to the best of my knowledge.</li>
+            <li>I authorize the collection, use, and disclosure of my personal data for identity verification purposes in accordance with applicable data protection laws.</li>
+            <li>I understand that my documents will be processed using automated systems including OCR and AI-based verification.</li>
+            <li>I consent to my biometric data (facial image) being captured and used for identity verification and liveness detection.</li>
+            <li>I acknowledge that providing false or misleading information may result in rejection of my application and potential legal consequences.</li>
+            <li>I agree to the Terms of Service and Privacy Policy of the platform.</li>
+            <li>I understand that my data may be shared with relevant regulatory authorities as required by law.</li>
+            <li>I confirm that I am the rightful owner of the documents being submitted and have the legal authority to share them.</li>
+            <li>I understand that the verification process may take up to 24-48 hours to complete in some cases.</li>
+            <li>I agree to notify the platform immediately if any of my submitted information changes.</li>
+          </ol>
+          <div className="pt-4 border-t border-border mt-6">
+            <p className="text-xs text-muted-foreground">
+              This consent is valid for the duration of your account and the services provided. You may withdraw consent at any time by contacting our support team at support@insureshield.com.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Last updated: January 2025
+            </p>
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30">
+          {!hasScrolledToEnd && (
+            <p className="text-xs text-amber-500 mb-3 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              Please scroll down to read the entire declaration
+            </p>
+          )}
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={onAccept} 
+              disabled={!hasScrolledToEnd}
+              className={cn(
+                hasScrolledToEnd
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  : "bg-muted text-muted-foreground cursor-not-allowed"
+              )}
+            >
+              I Accept
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 interface FileUploadActionProps {
   action: UiAction;
@@ -19,6 +112,8 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]); // Track uploaded file names
   const [isCompleted, setIsCompleted] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [showDeclaration, setShowDeclaration] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const maxFiles = action.maxFiles || 3;
@@ -190,20 +285,70 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
           )}
         </AnimatePresence>
 
+        {/* Consent Checkbox */}
+        {files.length > 0 && !isCompleted && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 space-y-2">
+            <button
+              type="button"
+              onClick={() => !consentChecked && setShowDeclaration(true)}
+              className="flex items-start gap-2 cursor-pointer text-left w-full"
+            >
+              <div className={cn(
+                "mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-shrink-0",
+                consentChecked 
+                  ? "bg-primary border-primary" 
+                  : "border-muted-foreground/50 hover:border-primary"
+              )}>
+                {consentChecked && <CheckCircle className="w-3 h-3 text-primary-foreground" />}
+              </div>
+              <span className="text-xs text-muted-foreground">
+                I have read and agree to all the{' '}
+                <span className="text-primary hover:underline inline-flex items-center gap-0.5">
+                  declaration
+                  <ExternalLink className="w-3 h-3" />
+                </span>
+              </span>
+            </button>
+            
+            {/* Alert message when not checked */}
+            {!consentChecked && (
+              <div className="flex items-center gap-1.5 text-amber-500">
+                <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                <span className="text-xs">You must agree to the declaration to continue</span>
+              </div>
+            )}
+          </motion.div>
+        )}
+
         {/* Upload Button */}
         {files.length > 0 && !isCompleted && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3">
             <Button
               onClick={handleUpload}
-              disabled={disabled}
+              disabled={disabled || !consentChecked}
               size="sm"
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+              className={cn(
+                "w-full",
+                consentChecked 
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  : "bg-muted text-muted-foreground cursor-not-allowed"
+              )}
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Upload {files.length} {files.length === 1 ? 'Document' : 'Documents'}
             </Button>
           </motion.div>
         )}
+        
+        {/* Declaration Modal */}
+        <DeclarationModal
+          isOpen={showDeclaration}
+          onClose={() => setShowDeclaration(false)}
+          onAccept={() => {
+            setConsentChecked(true);
+            setShowDeclaration(false);
+          }}
+        />
       </div>
     );
   }
@@ -349,8 +494,43 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
             )}
           </AnimatePresence>
 
+          {/* Consent Checkbox */}
+          {files.length > 0 && !isCompleted && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 space-y-2">
+              <button
+                type="button"
+                onClick={() => !consentChecked && setShowDeclaration(true)}
+                className="flex items-start gap-2 cursor-pointer text-left w-full"
+              >
+                <div className={cn(
+                  "mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-shrink-0",
+                  consentChecked 
+                    ? "bg-primary border-primary" 
+                    : "border-muted-foreground/50 hover:border-primary"
+                )}>
+                  {consentChecked && <CheckCircle className="w-3 h-3 text-primary-foreground" />}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  I have read and agree to all the{' '}
+                  <span className="text-primary hover:underline inline-flex items-center gap-0.5">
+                    declaration
+                    <ExternalLink className="w-3 h-3" />
+                  </span>
+                </span>
+              </button>
+              
+              {/* Alert message when not checked */}
+              {!consentChecked && (
+                <div className="flex items-center gap-1.5 text-amber-500">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="text-xs">You must agree to the declaration to continue</span>
+                </div>
+              )}
+            </motion.div>
+          )}
+
           {/* Upload Button */}
-          {files.length > 0 && (
+          {files.length > 0 && !isCompleted && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -358,14 +538,29 @@ export function FileUploadAction({ action, disabled = false, embedded = false }:
             >
               <Button
                 onClick={handleUpload}
-                disabled={disabled}
-                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                disabled={disabled || !consentChecked}
+                className={cn(
+                  "w-full",
+                  consentChecked 
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                )}
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Upload {files.length} {files.length === 1 ? 'Document' : 'Documents'}
               </Button>
             </motion.div>
           )}
+          
+          {/* Declaration Modal */}
+          <DeclarationModal
+            isOpen={showDeclaration}
+            onClose={() => setShowDeclaration(false)}
+            onAccept={() => {
+              setConsentChecked(true);
+              setShowDeclaration(false);
+            }}
+          />
         </div>
       </div>
     </motion.div>
