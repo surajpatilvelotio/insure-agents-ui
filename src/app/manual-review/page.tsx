@@ -27,7 +27,34 @@ export default function ManualReviewPage() {
     ? cases 
     : cases.filter(c => c.status === filter);
 
-  const stats = mockStatistics.last30Days;
+  // Calculate how many cases changed from their initial state
+  const initialCases = mockReviewCases;
+  
+  // Count changes from initial pending state
+  let newlyCleared = 0;
+  let newlyRejected = 0;
+  let pendingReduced = 0;
+  
+  cases.forEach((currentCase, index) => {
+    const initialCase = initialCases.find(ic => ic.id === currentCase.id);
+    if (initialCase && initialCase.status === 'pending' && currentCase.status !== 'pending') {
+      pendingReduced++;
+      if (currentCase.status === 'approved') newlyCleared++;
+      if (currentCase.status === 'rejected') newlyRejected++;
+    }
+  });
+  
+  // Start with mock statistics and adjust based on actions
+  const stats = {
+    total: mockStatistics.last30Days.total,
+    cleared: mockStatistics.last30Days.cleared + newlyCleared,
+    rejected: mockStatistics.last30Days.rejected + newlyRejected,
+    pending: mockStatistics.last30Days.pending - pendingReduced,
+  };
+  
+  // Calculate false positive rate based on updated numbers
+  const processedCases = stats.cleared + stats.rejected;
+  const falsePositiveRate = processedCases > 0 ? stats.cleared / processedCases : mockStatistics.falsePositiveRate;
 
   const handleCaseAction = (caseId: string, action: 'approved' | 'rejected' | 'hold', notes?: string) => {
     setCases(prev => prev.map(c => 
@@ -174,7 +201,7 @@ export default function ManualReviewPage() {
                 <TrendingUp className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-purple-500">{(mockStatistics.falsePositiveRate * 100).toFixed(0)}%</p>
+                <p className="text-2xl font-bold text-purple-500">{(falsePositiveRate * 100).toFixed(0)}%</p>
                 <p className="text-xs text-muted-foreground">False Positive Rate</p>
               </div>
             </div>
