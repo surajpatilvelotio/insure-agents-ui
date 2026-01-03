@@ -19,7 +19,7 @@ import type { ManualReviewCase, FilterStatus } from '@/types/manual-review';
 import { CaseDetailModal } from '@/components/manual-review/case-detail-modal';
 
 export default function ManualReviewPage() {
-  const [filter, setFilter] = useState<FilterStatus>('all');
+  const [filter, setFilter] = useState<FilterStatus>('pending');
   const [selectedCase, setSelectedCase] = useState<ManualReviewCase | null>(null);
   const [cases, setCases] = useState<ManualReviewCase[]>(mockReviewCases);
 
@@ -45,11 +45,14 @@ export default function ManualReviewPage() {
   });
   
   // Start with mock statistics and adjust based on actions
+  // Under Review count should reflect actual pending cases from the data
+  const actualPendingCount = cases.filter(c => c.status === 'pending').length;
+  
   const stats = {
     total: mockStatistics.last30Days.total,
     cleared: mockStatistics.last30Days.cleared + newlyCleared,
     rejected: mockStatistics.last30Days.rejected + newlyRejected,
-    pending: mockStatistics.last30Days.pending - pendingReduced,
+    pending: actualPendingCount,
   };
   
   // Calculate false positive rate based on updated numbers
@@ -82,7 +85,7 @@ export default function ManualReviewPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending': return { color: 'bg-amber-500/20 text-amber-400', label: 'Pending' };
+      case 'pending': return { color: 'bg-amber-500/20 text-amber-400', label: 'Under Review' };
       case 'approved': return { color: 'bg-emerald-500/20 text-emerald-400', label: 'Cleared' };
       case 'rejected': return { color: 'bg-red-500/20 text-red-400', label: 'Rejected' };
       case 'hold': return { color: 'bg-blue-500/20 text-blue-400', label: 'On Hold' };
@@ -185,7 +188,7 @@ export default function ManualReviewPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-amber-500">{stats.pending}</p>
-                <p className="text-xs text-muted-foreground">Pending Review</p>
+                <p className="text-xs text-muted-foreground">Under Review</p>
               </div>
             </div>
           </motion.div>
@@ -221,7 +224,7 @@ export default function ManualReviewPage() {
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               )}
             >
-              {status === 'all' ? 'All Cases' : status.charAt(0).toUpperCase() + status.slice(1)}
+              {status === 'all' ? 'All Cases' : status === 'pending' ? 'Under Review' : status.charAt(0).toUpperCase() + status.slice(1)}
               {status === 'pending' && (
                 <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-400">
                   {cases.filter(c => c.status === 'pending').length}
@@ -242,7 +245,13 @@ export default function ManualReviewPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Case ID
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Applicant
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Submitted
                   </th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Flag Reason
@@ -276,10 +285,23 @@ export default function ManualReviewPage() {
                       className="hover:bg-muted/30 transition-colors"
                     >
                       <td className="px-4 py-4">
+                        <span className="font-mono text-sm font-medium text-primary">{reviewCase.id}</span>
+                      </td>
+                      <td className="px-4 py-4">
                         <div>
                           <p className="font-medium text-foreground">{reviewCase.applicantName}</p>
                           <p className="text-xs text-muted-foreground">
                             {reviewCase.nationality} • {reviewCase.documentType}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div>
+                          <p className="text-sm text-foreground">
+                            {new Date(reviewCase.submittedAt).toLocaleDateString('en-US')}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(reviewCase.submittedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                       </td>

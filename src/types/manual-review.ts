@@ -3,6 +3,26 @@
  * Types for the compliance manual review dashboard
  */
 
+export interface VerificationResults {
+  documentAuthenticity: 'Pass' | 'Fail' | 'Pending';
+  faceMatchConfidence: number;
+  liveness: 'Pass' | 'Fail' | 'Pending';
+  identityConfidence: 'High' | 'Medium' | 'Low';
+}
+
+export interface ScreeningResults {
+  sanctions: 'No Hit' | 'Hit' | 'Possible Hit';
+  pep: 'No' | 'Yes' | 'Related';
+  watchlist: 'Clear' | 'Hit' | 'Possible Hit';
+}
+
+export interface EvidenceDocument {
+  type: 'passport' | 'visa' | 'id_card' | 'live_photo' | 'selfie' | 'other';
+  label: string;
+  fileName: string;
+  imageUrl: string;
+}
+
 export interface ManualReviewCase {
   id: string;
   applicantName: string;
@@ -16,6 +36,9 @@ export interface ManualReviewCase {
   confidence: number;
   evidence: Evidence[];
   pastOutcomes: PastOutcomes;
+  verificationResults: VerificationResults;
+  screeningResults: ScreeningResults;
+  documents: EvidenceDocument[];
   status: 'pending' | 'approved' | 'rejected' | 'hold';
   reviewedBy?: string;
   reviewedAt?: string;
