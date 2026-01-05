@@ -23,7 +23,8 @@ export type UiActionType =
   | 'confirm_data' 
   | 'info' 
   | 'additional_docs_request'  // For non-resident users needing extra documents
-  | 'live_photo';              // For liveness verification selfie capture
+  | 'live_photo'               // For liveness verification selfie capture
+  | 'verification_progress';   // For showing animated verification checks
 
 // Per-document extracted data for display
 export interface DocumentExtractedData {

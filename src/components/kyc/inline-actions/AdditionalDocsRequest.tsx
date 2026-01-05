@@ -10,8 +10,7 @@ import {
   Upload, 
   CheckCircle, 
   X, 
-  AlertTriangle,
-  Loader2
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -74,7 +73,6 @@ export function AdditionalDocsRequest({
     return initial;
   });
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -102,33 +100,31 @@ export function AdditionalDocsRequest({
   const allDocsSelected = requiredDocs.every(doc => docStates[doc]?.file);
 
   const handleSubmit = async () => {
-    if (!allDocsSelected || isSubmitting || isSubmitted) return;
+    if (!allDocsSelected || isSubmitted) return;
 
-    setIsSubmitting(true);
+    // Collect files and their document types in matching order
+    const filesWithTypes = requiredDocs
+      .map(doc => ({ file: docStates[doc]?.file, type: doc }))
+      .filter((item): item is { file: File; type: string } => item.file !== null);
     
+    const files = filesWithTypes.map(item => item.file);
+    const types = filesWithTypes.map(item => item.type);
+    
+    // Generate dynamic message based on files uploaded
+    const fileCount = files.length;
+    const message = fileCount === 1 
+      ? 'Here is my additional document' 
+      : `Here are my ${fileCount} additional documents`;
+    
+    // Immediately mark as submitted for optimistic UI update
+    setIsSubmitted(true);
+    
+    // Send message in background - UI already shows success
     try {
-      // Collect files and their document types in matching order
-      const filesWithTypes = requiredDocs
-        .map(doc => ({ file: docStates[doc]?.file, type: doc }))
-        .filter((item): item is { file: File; type: string } => item.file !== null);
-      
-      const files = filesWithTypes.map(item => item.file);
-      const types = filesWithTypes.map(item => item.type);
-      
-      // Generate dynamic message based on files uploaded
-      const fileCount = files.length;
-      const message = fileCount === 1 
-        ? 'Here is my additional document' 
-        : `Here are my ${fileCount} additional documents`;
-      
-      // Send message with documents and their types
       await useKycStore.getState().sendMessage(message, files, types);
-      
-      setIsSubmitted(true);
     } catch (error) {
       console.error('Failed to submit additional documents:', error);
-    } finally {
-      setIsSubmitting(false);
+      // Could revert state here if needed, but upload rarely fails
     }
   };
 
@@ -291,20 +287,11 @@ export function AdditionalDocsRequest({
       <div className="px-4 pb-4">
         <Button
           onClick={handleSubmit}
-          disabled={!allDocsSelected || disabled || isSubmitting}
+          disabled={!allDocsSelected || disabled}
           className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Uploading...
-            </>
-          ) : (
-            <>
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Submit All Documents ({requiredDocs.filter(d => docStates[d]?.file).length}/{requiredDocs.length})
-            </>
-          )}
+          <CheckCircle className="w-4 h-4 mr-2" />
+          Submit All Documents ({requiredDocs.filter(d => docStates[d]?.file).length}/{requiredDocs.length})
         </Button>
       </div>
     </motion.div>

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import type { KycStatus } from '@/types';
 
 // Extended status type to include backend values
-type ExtendedKycStatus = KycStatus | 'approved' | 'in_progress';
+type ExtendedKycStatus = KycStatus | 'approved' | 'in_progress' | 'pending_review' | 'manual_review' | 'rejected' | 'failed';
 
 const kycConfig: Record<string, {
   icon: typeof AlertCircle;
@@ -19,10 +19,11 @@ const kycConfig: Record<string, {
   iconClass: string;
   showAction: boolean;
   isVerified?: boolean;
+  isUnderReview?: boolean;
 }> = {
   pending: {
     icon: AlertCircle,
-    title: 'Complete Your KYC Verification',
+    title: 'Complete Your Identity Verification',
     message: 'Verify your identity to unlock all features and ensure secure transactions.',
     bgClass: 'bg-amber-500/10 border-amber-500/20',
     iconClass: 'text-amber-500',
@@ -30,24 +31,53 @@ const kycConfig: Record<string, {
   },
   in_progress: {
     icon: AlertCircle,
-    title: 'KYC Verification In Progress',
+    title: 'Identity Verification In Progress',
     message: 'Your verification is being processed. Please complete the remaining steps.',
     bgClass: 'bg-blue-500/10 border-blue-500/20',
     iconClass: 'text-blue-500',
     showAction: true,
   },
+  // For rejected/failed cases - show as "Under Review" (not failure to customer)
   rejected: {
-    icon: XCircle,
-    title: 'KYC Verification Failed',
-    message: 'Your verification was unsuccessful. Please try again with valid documents.',
-    bgClass: 'bg-destructive/10 border-destructive/20',
-    iconClass: 'text-destructive',
-    showAction: true,
+    icon: Shield,
+    title: 'Verification in Progress (Under Review)',
+    message: "We're reviewing your details to complete the verification process. This usually takes a short time.",
+    bgClass: 'bg-blue-500/10 border-blue-500/20',
+    iconClass: 'text-blue-500',
+    showAction: false,
+    isUnderReview: true,
+  },
+  failed: {
+    icon: Shield,
+    title: 'Verification in Progress (Under Review)',
+    message: "We're reviewing your details to complete the verification process. This usually takes a short time.",
+    bgClass: 'bg-blue-500/10 border-blue-500/20',
+    iconClass: 'text-blue-500',
+    showAction: false,
+    isUnderReview: true,
+  },
+  pending_review: {
+    icon: Shield,
+    title: 'Verification in Progress (Under Review)',
+    message: "We're reviewing your details to complete the verification process. This usually takes a short time.",
+    bgClass: 'bg-blue-500/10 border-blue-500/20',
+    iconClass: 'text-blue-500',
+    showAction: false,
+    isUnderReview: true,
+  },
+  manual_review: {
+    icon: Shield,
+    title: 'Verification in Progress (Under Review)',
+    message: "We're reviewing your details to complete the verification process. This usually takes a short time.",
+    bgClass: 'bg-blue-500/10 border-blue-500/20',
+    iconClass: 'text-blue-500',
+    showAction: false,
+    isUnderReview: true,
   },
   verified: {
     icon: CheckCircle2,
-    title: 'KYC Verified',
-    message: 'Your identity has been verified successfully.',
+    title: 'Identity Verified',
+    message: 'Your identity has been successfully verified.',
     bgClass: 'bg-emerald-500/10 border-emerald-500/20',
     iconClass: 'text-emerald-500',
     showAction: false,
@@ -55,8 +85,17 @@ const kycConfig: Record<string, {
   },
   approved: {
     icon: CheckCircle2,
-    title: 'KYC Verified',
-    message: 'Your identity has been verified successfully.',
+    title: 'Identity Verified',
+    message: 'Your identity has been successfully verified.',
+    bgClass: 'bg-emerald-500/10 border-emerald-500/20',
+    iconClass: 'text-emerald-500',
+    showAction: false,
+    isVerified: true,
+  },
+  completed: {
+    icon: CheckCircle2,
+    title: 'Identity Verified',
+    message: 'Your identity has been successfully verified.',
     bgClass: 'bg-emerald-500/10 border-emerald-500/20',
     iconClass: 'text-emerald-500',
     showAction: false,
@@ -94,7 +133,31 @@ export function KycBanner() {
               <span className="font-semibold text-sm text-emerald-400">Identity Verified</span>
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             </div>
-            <p className="text-xs text-slate-400">Your account is fully verified and secure</p>
+            <p className="text-xs text-slate-400">Your identity has been successfully verified.</p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // If under review (failed/rejected/pending_review), show a review status badge
+  if (config.isUnderReview) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-6"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20">
+            <Shield className="h-4 w-4 text-blue-500" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-blue-400">Verification in Progress</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">Under Review</span>
+            </div>
+            <p className="text-xs text-slate-400">We&apos;re reviewing your details. This usually takes a short time.</p>
           </div>
         </div>
       </motion.div>

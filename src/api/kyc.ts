@@ -115,7 +115,7 @@ export async function startVerification(
   callbacks: ChatStreamCallbacks
 ): Promise<void> {
   return sendChatMessage({
-    message: 'Start my KYC verification',
+    message: 'Start identity verification',
     sessionId,
     userId,
     callbacks,

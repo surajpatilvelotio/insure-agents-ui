@@ -191,7 +191,7 @@ export const useKycStore = create<KycState>((set, get) => {
       // Add user message
       get().addMessage({
         role: 'user',
-        content: 'Start my KYC verification',
+        content: 'Start identity verification',
       });
 
       await startVerification(userId, sessionId, createCallbacks());
