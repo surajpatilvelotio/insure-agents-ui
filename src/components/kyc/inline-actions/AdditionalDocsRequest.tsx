@@ -105,7 +105,7 @@ export function AdditionalDocsRequest({
     // Collect files and their document types in matching order
     const filesWithTypes = requiredDocs
       .map(doc => ({ file: docStates[doc]?.file, type: doc }))
-      .filter((item): item is { file: File; type: string } => item.file !== null);
+      .filter((item): item is { file: File; type: AdditionalDocType } => item.file !== null);
     
     const files = filesWithTypes.map(item => item.file);
     const types = filesWithTypes.map(item => item.type);

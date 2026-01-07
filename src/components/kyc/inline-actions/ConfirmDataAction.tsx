@@ -126,7 +126,7 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
   const displayFields = mergedData ? getDisplayFields(mergedData) : [];
 
   const hasValidDocumentData = documents && documents.some(doc => {
-    const docData = doc.data || (doc as Record<string, unknown>).extracted_data as Record<string, unknown>;
+    const docData = doc.data || (doc as unknown as Record<string, unknown>).extracted_data as Record<string, unknown>;
     return docData && Object.keys(docData).length > 0;
   });
   
@@ -138,7 +138,7 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
         {showPerDocumentView ? (
           <div className="space-y-3 mb-3">
             {documents!.map((doc, index) => {
-              const docData = doc.data || (doc as Record<string, unknown>).extracted_data as Record<string, unknown>;
+              const docData = doc.data || (doc as unknown as Record<string, unknown>).extracted_data as Record<string, unknown>;
               return (
                 <DataSection
                   key={doc.filename || index}
@@ -254,7 +254,7 @@ export function ConfirmDataAction({ action, disabled = false, embedded = false }
           {showPerDocumentView ? (
             <div className="space-y-3">
               {documents!.map((doc, index) => {
-                const docData = doc.data || (doc as Record<string, unknown>).extracted_data as Record<string, unknown>;
+                const docData = doc.data || (doc as unknown as Record<string, unknown>).extracted_data as Record<string, unknown>;
                 return (
                   <DataSection
                     key={doc.filename || index}
