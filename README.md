@@ -52,8 +52,63 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Demo Credentials
 
 ```
-Member ID: INS2024001
-Password:  password123
+Sign-up for new user, and use email_id/member_id to login
+```
+
+## Testing KYC Verification Flow
+
+Follow these steps to test the complete KYC verification process:
+
+### Demo Files Location
+
+Mock documents are available in `public/demo/`:
+
+| File | Purpose |
+|------|---------|
+| `passport-IN.png` | Indian passport for identity verification |
+| `visa-IN.png` | Valid Indian visa (for **SUCCESS** case) |
+| `visa-N.png` | Non-valid visa (for **REJECTION** case) |
+| `livephoto.jpg` | Live photo for facial verification |
+
+### Step-by-Step Testing
+
+#### 1. Sign Up
+- Navigate to the **Sign Up** page
+- Fill in your details (name, email, password, etc.)
+- Complete registration
+
+#### 2. Login
+- Use your registered **email** or **member ID** to login
+- Enter your password
+
+#### 3. Start KYC Verification
+- After login, you'll see a **KYC Pending** banner on the dashboard
+- Click **"Start Verification"** button to begin the KYC process
+
+#### 4. Upload Passport
+- When prompted, upload `passport-IN.png` from `public/demo/`
+- Wait for OCR extraction to complete
+
+#### 5. Upload Visa & Live Photo
+
+**For SUCCESS Case:**
+- Upload `visa-IN.png` - Valid Indian visa
+- Upload `livephoto.jpg` - Live photo
+- The verification will be **APPROVED**
+
+**For REJECTION Case:**
+- Upload `visa-N.png` - Non-valid visa
+- Upload `livephoto.jpg` - Live photo
+- The verification will be **REJECTED**
+
+### Quick Test Commands
+
+```bash
+# Start the development server
+bun dev
+
+# Open the app
+# Navigate to http://localhost:3000
 ```
 
 ## Project Structure
