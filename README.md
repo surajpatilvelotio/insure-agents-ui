@@ -52,7 +52,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Demo Credentials
 
 ```
-Sign-up for new user, and use email_id/member_id to login
+Sign up for a new user and then log in with the new email or member ID.
+- **Valid case:** Create one account and run the KYC flow with `visa-IN.png` (expects APPROVED).
+- **Rejected case:** Create a second account and use `visa-N.png` (expects REJECTED). 
 ```
 
 ## Testing KYC Verification Flow
