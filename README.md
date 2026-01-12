@@ -51,11 +51,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Demo Credentials
 
-```
-Sign up for a new user and then log in with the new email or member ID.
-- **Valid case:** Create one account and run the KYC flow with `visa-IN.png` (expects APPROVED).
-- **Rejected case:** Create a second account and use `visa-N.png` (expects REJECTED). 
-```
+| User | Email | Password | KYC Result |
+|------|-------|----------|------------|
+| Kopal Gupta | kopal.gupta@outlook.com | TestPass123 | SUCCESS |
+| Anand Kumar | anand@gmail.com | TestPass123 | REJECT |
 
 ## Testing KYC Verification Flow
 
